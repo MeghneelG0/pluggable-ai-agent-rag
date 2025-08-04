@@ -11,6 +11,7 @@ const EnvironmentSchema = z.object({
 
   // Gemini API
   GEMINI_API_KEY: z.string().optional(),
+  GOOGLE_AI_API_KEY: z.string().optional(), // Alternative name
 
   // Weather API
   OPENWEATHER_API_KEY: z.string().optional(),
@@ -45,7 +46,7 @@ export const config = {
   port: env.PORT,
 
   gemini: {
-    apiKey: env.GEMINI_API_KEY,
+    apiKey: env.GEMINI_API_KEY || env.GOOGLE_AI_API_KEY,
   },
 
   weather: {

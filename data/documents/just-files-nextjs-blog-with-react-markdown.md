@@ -1,7 +1,7 @@
 # Just Files | Build a Blog with Next.js and React Markdown
 
-**Author:** Andres Zenteno  
-**Published:** May 12, 2025  
+**Author:** Andres Zenteno
+**Published:** May 12, 2025
 **Source:** [The Tech Pulse on Medium](https://medium.com/the-tech-pulse/just-files-build-a-blog-with-next-js-and-react-markdown-305935c86aca)
 
 ---
@@ -94,7 +94,7 @@ And when writing feels like a workshop instead of a platform, you do more of it.
 
 This blog is built on a simple idea: just markdown files and components — no CMS, backend, or lock-in. If you like this approach, you can clone it and make it your own.
 
-The full source code is available here:  
+The full source code is available here:
 **Repository:** [andresz74/nextjs-markdown-blog](https://github.com/andresz74/nextjs-markdown-blog)
 
 Feel free to fork, remix, or use it as a starting point for your writing space.
@@ -114,7 +114,7 @@ Because it's just components and markdown, adding features is straightforward. A
 
 **Tags:** Next.js, Markdown, API, Blog, Static Site
 
-**About the Author:**  
+**About the Author:**
 Andres Zenteno is a Frontend Developer passionate about creating intuitive, responsive web experiences using React and modern web technologies. Continuously learning and growing.
 
 **Publication:** The Tech Pulse - Stay ahead of the curve with The Tech Pulse, exploring technology & software innovations. Enjoy engaging content, expert commentary, product reviews, and how-to guides for the digital age.

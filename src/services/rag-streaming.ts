@@ -1,6 +1,5 @@
 import { config } from '@/config';
-import { WeaviateService, SearchResult } from './weaviate';
-import { GeminiService } from './gemini';
+import { WeaviateService, SearchResult } from '@/services/weaviate';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';

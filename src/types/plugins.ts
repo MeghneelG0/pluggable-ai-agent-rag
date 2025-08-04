@@ -1,17 +1,17 @@
 // Base plugin interface
-export interface IPlugin {
+export interface Plugin {
   name: string;
   description: string;
+  detectIntent(message: string): boolean;
   execute(input: string): Promise<PluginResult>;
-  canHandle(input: string): boolean;
 }
 
 // Plugin result
 export interface PluginResult {
+  name: string;
   success: boolean;
-  output: Record<string, unknown>;
+  data?: any;
   error?: string;
-  metadata?: Record<string, unknown>;
 }
 
 // Plugin intent detection
@@ -24,10 +24,10 @@ export interface PluginIntent {
 
 // Plugin router interface
 export interface IPluginRouter {
-  registerPlugin(plugin: IPlugin): void;
+  registerPlugin(plugin: Plugin): void;
   detectIntent(input: string): PluginIntent | null;
   executePlugin(pluginName: string, input: string): Promise<PluginResult>;
-  getAvailablePlugins(): IPlugin[];
+  getAvailablePlugins(): Plugin[];
 }
 
 // Weather plugin specific types

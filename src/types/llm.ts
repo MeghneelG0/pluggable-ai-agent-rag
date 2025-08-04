@@ -1,4 +1,4 @@
-import { AgentContext } from './agent';
+// LLM types - no longer importing from agent
 
 // LLM message interface
 export interface LLMMessage {
@@ -41,7 +41,7 @@ export interface PromptTemplate {
 
 // Prompt builder interface
 export interface IPromptBuilder {
-  buildSystemPrompt(context: AgentContext): string;
-  buildUserPrompt(context: AgentContext): string;
-  buildFullPrompt(context: AgentContext): LLMRequest;
+  buildSystemPrompt(context: any): string;
+  buildUserPrompt(context: any): string;
+  buildFullPrompt(context: any): LLMRequest;
 }

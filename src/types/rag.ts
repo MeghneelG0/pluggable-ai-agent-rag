@@ -27,6 +27,20 @@ export interface SearchResult {
   rank: number;
 }
 
+// RAG result for agent responses
+export interface RAGResult {
+  content: string;
+  source: string;
+  score: number;
+  metadata: Record<string, any>;
+}
+
+// RAG options for search
+export interface RAGOptions {
+  maxSearchResults?: number;
+  similarityThreshold?: number;
+}
+
 // RAG service interface
 export interface IRAGService {
   addDocument(content: string, source: string, metadata?: Record<string, unknown>): Promise<void>;

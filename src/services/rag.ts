@@ -1,7 +1,7 @@
 import { config } from '@/config';
-import { WeaviateService, SearchResult } from './weaviate';
-import { SimpleDocumentProcessor } from './simple-document-processor';
-import { GeminiService } from './gemini';
+import { WeaviateService, SearchResult } from '@/services/weaviate';
+import { SimpleDocumentProcessor } from '@/services/simple-document-processor';
+import { GeminiService } from '@/services/gemini';
 
 export interface RAGOptions {
   maxSearchResults?: number;

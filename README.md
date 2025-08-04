@@ -99,6 +99,37 @@ OPENWEATHER_API_KEY=your_openweather_api_key_here
 ### 4. Add Documents
 Place your markdown files in `data/documents/` directory.
 
+---
+
+## 🚀 Deployment
+
+### Quick Deploy (Railway - Recommended)
+1. **Connect GitHub**: Link your repository to Railway
+2. **Environment Variables**: Add required variables in Railway dashboard
+3. **Deploy**: Railway automatically builds and deploys using Dockerfile
+
+### Manual Deployment
+```bash
+# Build and run with Docker
+docker build -t rag-agent-server .
+docker run -p 3000:3000 rag-agent-server
+
+# Or use Docker Compose
+docker-compose up -d
+```
+
+### Environment Variables for Production
+```
+GEMINI_API_KEY=your_gemini_api_key
+WEAVIATE_URL=your_weaviate_url
+WEAVIATE_API_KEY=your_weaviate_api_key
+OPENWEATHER_API_KEY=your_openweather_api_key (optional)
+PORT=3000
+NODE_ENV=production
+```
+
+📖 **Detailed deployment guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md)
+
 ### 5. Start Server
 ```bash
 npm run dev

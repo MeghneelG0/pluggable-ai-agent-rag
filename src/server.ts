@@ -1,14 +1,14 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { config } from './config';
-import { MemoryService } from './services/memory';
-import { StreamingRAGService } from './services/rag-streaming';
-import { healthRoutes } from './routes/health';
-import { agentRoutes } from './routes/agent';
-import { ragRoutes } from './routes/rag';
+import { config } from '@/config';
+import { MemoryService } from '@/services/memory';
+import { StreamingRAGService } from '@/services/rag-streaming';
+import { healthRoutes } from '@/routes/health';
+import { agentRoutes } from '@/routes/agent';
+import { ragRoutes } from '@/routes/rag';
 
 export class Server {
-  private fastify: Fastify.FastifyInstance;
+  private fastify: FastifyInstance;
   private memoryService: MemoryService;
   private ragService: StreamingRAGService;
 

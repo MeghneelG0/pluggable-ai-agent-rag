@@ -1,4 +1,5 @@
 import { evaluate } from 'mathjs';
+import { Plugin, PluginResult } from '@/types/plugins';
 
 export interface MathResult {
   expression: string;
@@ -6,8 +7,44 @@ export interface MathResult {
   timestamp: string;
 }
 
-export class MathPlugin {
-  async evaluate(expression: string): Promise<MathResult> {
+export class MathPlugin implements Plugin {
+  public readonly name = 'math';
+  public readonly description = 'Evaluate mathematical expressions safely';
+  detectIntent(message: string): boolean {
+    const mathMatch = message.match(/(\d+(?:\s*[\+\-\*\/]\s*\d+)+)/);
+    return !!mathMatch;
+  }
+
+  async execute(message: string): Promise<PluginResult> {
+    const mathMatch = message.match(/(\d+(?:\s*[\+\-\*\/]\s*\d+)+)/);
+    if (!mathMatch) {
+      return {
+        name: this.name,
+        success: false,
+        error: 'No mathematical expression found in message',
+      };
+    }
+
+    const expression = mathMatch[1];
+    console.log(`🧮 Math plugin detected for expression: ${expression}`);
+
+    try {
+      const mathResult = await this.evaluate(expression || '');
+      return {
+        name: this.name,
+        success: true,
+        data: mathResult,
+      };
+    } catch (error) {
+      return {
+        name: this.name,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  private async evaluate(expression: string): Promise<MathResult> {
     try {
       console.log(`🧮 Evaluating math expression: ${expression}`);
 

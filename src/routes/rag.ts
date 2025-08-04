@@ -1,9 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { StreamingRAGService } from '../services/rag-streaming';
+import { StreamingRAGService } from '@/services/rag-streaming';
 
 export async function ragRoutes(fastify: FastifyInstance, opts: { ragService: StreamingRAGService }) {
   // Process and index documents
-  fastify.post('/rag/process', async (request, reply) => {
+  fastify.post('/rag/process', async (_request, reply) => {
     try {
       await opts.ragService.processAndIndexDocuments();
 
@@ -41,8 +41,8 @@ export async function ragRoutes(fastify: FastifyInstance, opts: { ragService: St
       }
 
       const results = await opts.ragService.search(query, {
-        maxSearchResults: maxResults,
-        similarityThreshold,
+        maxSearchResults: maxResults || 3,
+        similarityThreshold: similarityThreshold || 0.7,
       });
 
       reply.send({
@@ -63,7 +63,7 @@ export async function ragRoutes(fastify: FastifyInstance, opts: { ragService: St
   });
 
   // Get RAG stats
-  fastify.get('/rag/stats', async (request, reply) => {
+  fastify.get('/rag/stats', async (_request, reply) => {
     try {
       const stats = await opts.ragService.getStats();
 
@@ -83,7 +83,7 @@ export async function ragRoutes(fastify: FastifyInstance, opts: { ragService: St
   });
 
   // Health check for RAG system
-  fastify.get('/rag/health', async (request, reply) => {
+  fastify.get('/rag/health', async (_request, reply) => {
     try {
       const health = await opts.ragService.healthCheck();
       const overallHealth = health.weaviate;
@@ -106,7 +106,7 @@ export async function ragRoutes(fastify: FastifyInstance, opts: { ragService: St
   });
 
   // Clear index
-  fastify.delete('/rag/clear', async (request, reply) => {
+  fastify.delete('/rag/clear', async (_request, reply) => {
     try {
       await opts.ragService.clearIndex();
 

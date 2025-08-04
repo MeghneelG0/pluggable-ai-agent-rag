@@ -1,43 +1,47 @@
 import { z } from 'zod';
 
-// Agent request schema
+// Request/Response schemas
 export const AgentRequestSchema = z.object({
   session_id: z.string().min(1, 'Session ID is required'),
-  message: z.string().min(1, 'Message cannot be empty').max(1000, 'Message too long')
+  message: z.string().min(1, 'Message is required'),
 });
 
-export type AgentRequest = z.infer<typeof AgentRequestSchema>;
-
-// Agent response schema
 export const AgentResponseSchema = z.object({
   reply: z.string(),
   used_chunks: z.array(z.object({
     content: z.string(),
     source: z.string(),
-    score: z.number().min(0).max(1),
-    metadata: z.record(z.unknown()).optional()
+    score: z.number(),
+    metadata: z.record(z.any()),
   })),
   plugins_used: z.array(z.object({
     name: z.string(),
-    input: z.string(),
-    output: z.record(z.unknown()),
-    success: z.boolean()
+    success: z.boolean(),
+    data: z.any().optional(),
+    error: z.string().optional(),
   })),
   memory_snapshot: z.array(z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string(),
-    timestamp: z.string().optional()
+    timestamp: z.string(),
   })),
-  session_id: z.string()
+  session_id: z.string(),
 });
 
+// Type exports
+export type AgentRequest = z.infer<typeof AgentRequestSchema>;
 export type AgentResponse = z.infer<typeof AgentResponseSchema>;
 
-// Agent context for processing
-export interface AgentContext {
-  sessionId: string;
-  userMessage: string;
-  memorySummary: string;
-  retrievedChunks: any[]; // Will be properly typed in Phase 2
-  pluginOutputs: any[]; // Will be properly typed in Phase 3
+// Agent service interfaces
+export interface AgentServiceInterface {
+  initialize(): Promise<void>;
+  processMessage(sessionId: string, message: string): Promise<AgentResponse>;
+}
+
+// Error types
+export interface AgentError {
+  code: string;
+  message: string;
+  sessionId?: string;
+  timestamp: string;
 }

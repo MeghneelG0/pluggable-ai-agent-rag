@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { AgentRequestSchema, AgentResponseSchema } from '@/types/agent';
 import { MemoryService } from '@/services/memory';
 import { StreamingRAGService } from '@/services/rag-streaming';
-import { SimpleAgentService } from '@/services/agent-simple';
+import { AgentService } from '@/services/agent-clean';
 import { sendAgentError, handleValidationError } from '@/utils/error-handler';
 
 export async function agentRoutes(fastify: FastifyInstance, opts: {
@@ -24,7 +24,7 @@ export async function agentRoutes(fastify: FastifyInstance, opts: {
 
     try {
       // Create agent service with full capabilities
-      const agentService = new SimpleAgentService(opts.memoryService, opts.ragService);
+      const agentService = new AgentService(opts.memoryService, opts.ragService);
 
       // Initialize the agent service
       await agentService.initialize();

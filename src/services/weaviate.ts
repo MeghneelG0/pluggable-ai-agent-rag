@@ -49,42 +49,12 @@ export class WeaviateService {
     }
   }
 
-  private async createSchema(): Promise<void> {
-    const schema = {
-      class: this.className,
-      description: 'Document chunks for RAG system',
-      vectorizer: 'text2vec-weaviate', // Use Weaviate's built-in vectorizer
-      properties: [
-        {
-          name: 'content',
-          dataType: ['text'],
-          description: 'The text content of the chunk',
-        },
-        {
-          name: 'source',
-          dataType: ['text'],
-          description: 'Source document filename',
-        },
-        {
-          name: 'fileName',
-          dataType: ['text'],
-          description: 'Original filename',
-        },
-        {
-          name: 'processedAt',
-          dataType: ['text'],
-          description: 'Timestamp when chunk was processed',
-        },
-      ],
-    };
 
-    await this.client.schema.classCreator().withClass(schema).do();
-  }
 
           async addChunks(chunks: DocumentChunk[]): Promise<void> {
     try {
       console.log(`🔄 Starting to add ${chunks.length} chunks to Weaviate...`);
-      
+
       const batcher: ObjectsBatcher = this.client.batch.objectsBatcher();
 
       for (const chunk of chunks) {
@@ -98,7 +68,7 @@ export class WeaviateService {
           },
           // No vector needed - Weaviate generates it automatically
         };
-        
+
         console.log(`📝 Adding chunk: ${chunk.source} (${chunk.content.substring(0, 50)}...)`);
         batcher.withObject(objectData);
       }
@@ -114,9 +84,9 @@ export class WeaviateService {
     }
   }
 
-          async search(query: string, embedding: number[], limit: number = 3): Promise<SearchResult[]> {
+          async search(query: string, _embedding: number[], limit: number = 3): Promise<SearchResult[]> {
     try {
-      // Use nearText since we have text2vec-transformers configured
+      // Use nearText since we have text2vec-weaviate configured
       const response = await this.client.graphql
         .get()
         .withClassName(this.className)

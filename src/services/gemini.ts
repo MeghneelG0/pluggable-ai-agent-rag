@@ -183,7 +183,7 @@ To enable real AI responses, please add your GEMINI_API_KEY to the .env file.`;
     };
   }
 
-  async generateMockEmbedding(text: string): Promise<number[]> {
+  async generateMockEmbedding(_text: string): Promise<number[]> {
     // Generate a mock embedding (random vector)
     const mockEmbedding = Array.from({ length: 768 }, () => Math.random() - 0.5);
     return mockEmbedding;
