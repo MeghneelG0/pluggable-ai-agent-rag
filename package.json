@@ -1,0 +1,41 @@
+{
+  "name": "rag-ai-agent-server",
+  "version": "1.0.0",
+  "description": "Pluggable AI Agent Server with RAG, Memory, and Plugin System",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts --max-old-space-size=8192 --expose-gc",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "rag",
+    "agent",
+    "typescript",
+    "fastify"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cors": "8.4.0",
+    "@google/generative-ai": "0.21.0",
+    "dotenv": "16.3.1",
+    "fastify": "4.29.1",
+    "mathjs": "11.11.0",
+    "uuid": "9.0.1",
+    "weaviate-ts-client": "1.6.0",
+    "zod": "3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "20.8.0",
+    "@types/uuid": "9.0.7",
+    "tsc-alias": "1.8.8",
+    "tsx": "4.20.3",
+    "typescript": "5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
