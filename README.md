@@ -8,17 +8,32 @@ While integrating RAG in a strict TypeScript/Node.js-only stack was definitely a
 
 Live deployed URL : https://pluggable-ai-agent-rag-production.up.railway.app/health
 
-Note: Its a backend service only with no frontend designed yet.
+⚠️ Disclaimer
+Backend Only: This project is a backend API service. No frontend UI has been developed yet.
+
+Temporary Hosting:
+
+Weaviate: Free cloud instance is valid for 14 days only.
+
+Railway: Free deployment tier is active for 30 days from the deployment date.
+
+The project will likely be deprecated once these free tiers expire unless upgraded or migrated. 
 
 ## Results:
 
-You need to use Postman to check POST methods, here's the results:
+You need to use Postman to check POST methods, here's the results -- all using deployed URL:
 
-1. RAG Testing
+**1. RAG Testing**
 
-2. Weather Plugin Testing
+<img width="851" height="632" alt="image" src="https://github.com/user-attachments/assets/0efd9b11-137c-465a-822f-f30df4e3767a" />
 
-3. Mathjs Plugin Testing
+**2. Weather Plugin Testing**
+
+<img width="851" height="644" alt="image" src="https://github.com/user-attachments/assets/70f3b6b2-cf99-4017-b78f-eefbff79157d" />
+
+**3. Mathjs Plugin Testing**
+
+<img width="850" height="644" alt="image" src="https://github.com/user-attachments/assets/a742889c-d3ca-43b7-9773-191052f171df" />
 
 > code is modular, neat and you can check scalability issues in NOTES.md
 ## 🏗️ Architecture
@@ -401,27 +416,3 @@ DEBUG=* npm run dev
 MIT License - see LICENSE file for details
 
 ---
-
-## 🎯 Roadmap
-
-### Phase 2: Plugin System
-- [ ] Weather plugin implementation
-- [ ] Math plugin implementation
-- [ ] Intent detection system
-- [ ] Plugin output injection
-
-### Phase 3: Production Ready
-- [ ] Health endpoint
-- [ ] Error monitoring
-- [ ] Rate limiting
-- [ ] Authentication
-
-### Phase 4: Advanced Features
-- [ ] Multi-modal support
-- [ ] Custom embeddings
-- [ ] Advanced memory management
-- [ ] Plugin marketplace
-
----
-
-**Built with ❤️ using TypeScript, Fastify, and Gemini Pro**
