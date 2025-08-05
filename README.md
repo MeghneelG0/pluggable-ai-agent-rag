@@ -1,23 +1,26 @@
-# 🤖 Pluggable AI Agent Server
+# Pluggable AI Agent with RAG, Memory, and Tools
 
-A TypeScript/Node.js server that provides an intelligent AI agent with **RAG (Retrieval-Augmented Generation)**, **per-session memory**, and **plugin system** capabilities.
+> ⚡ This project was built as part of a 1-day technical internship challenge. The goal was to implement a pluggable AI agent with RAG, memory, and plugin capabilities — all deployed, documented, and tested within ~6 hours.
 
-## 🚀 Current Status: **Phase 1 Complete** ✅
+This project implements a conversational AI agent built on a modern Node.js and TypeScript stack. It features a robust architecture that incorporates Retrieval-Augmented Generation (RAG) for knowledge retrieval, persistent memory for conversational context, and a plugin system for extending its capabilities (e.g., performing calculations, fetching live data).
 
-### ✅ **What's Working:**
-- **RAG System**: Document chunking, embedding, and semantic search
-- **Memory System**: Per-session conversation history
-- **AI Integration**: Gemini Pro for intelligent responses
-- **Source Attribution**: AI cites document sources in responses
-- **Structured API**: Clean JSON request/response format
+While integrating RAG in a strict TypeScript/Node.js-only stack was definitely a head-scratcher, it was a great learning curve in balancing backend efficiency with LLM orchestration.
 
-### 🔄 **In Progress:**
-- Plugin System (Weather, Math plugins)
-- Deployment to Railway/Render
-- Health endpoint
+Live deployed URL : https://pluggable-ai-agent-rag-production.up.railway.app/health
 
----
+Note: Its a backend service only with no frontend designed yet.
 
+## Results:
+
+You need to use Postman to check POST methods, here's the results:
+
+1. RAG Testing
+
+2. Weather Plugin Testing
+
+3. Mathjs Plugin Testing
+
+> code is modular, neat and you can check scalability issues in NOTES.md
 ## 🏗️ Architecture
 
 ```
@@ -49,6 +52,7 @@ A TypeScript/Node.js server that provides an intelligent AI agent with **RAG (Re
 1. **Node.js** (v18+)
 2. **Weaviate Cloud** account (or local instance)
 3. **Google AI API Key** (for Gemini)
+4. **OpenWeatherMap API Key** (for weather plugin)
 
 ---
 

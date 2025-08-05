@@ -4,311 +4,183 @@
 
 **Goal**: Build a production-ready AI Agent Server with RAG, memory, and plugins in TypeScript/Node.js.
 
-**Timeline**: Started as a hackathon project, evolved into a comprehensive AI agent system.
+**Timeline**: Completed in under 6 hours as part of internship challenge.
 
 ---
 
-## 🏗️ Architecture Decisions
+## 🤖 AI vs Manual Contributions
 
-### **Why Fastify?**
-- **Performance**: Faster than Express for high-throughput APIs
-- **TypeScript**: Excellent TypeScript support out of the box
-- **Validation**: Built-in schema validation with JSON Schema
-- **Plugin System**: Extensible architecture for future features
-
-### **Why Weaviate?**
-- **Vector Search**: Native vector database with excellent search capabilities
-- **Built-in Vectorizer**: `text2vec-weaviate` eliminates need for external embedding service
-- **Scalability**: Cloud-native with automatic scaling
-- **GraphQL API**: Modern, type-safe query interface
-
-### **Why Gemini Pro?**
-- **Performance**: State-of-the-art language model
-- **Cost**: Competitive pricing for production use
-- **Integration**: Excellent TypeScript SDK
-- **Multimodal**: Future-ready for image/text processing
+| Component                         | Status           |
+|----------------------------------|------------------|
+| Code scaffolding (Fastify, env)  | 👨‍💻 Manual        |
+| Weaviate schema config           | 👨‍💻 Manual        |
+| RAG logic (chunking, search)     | 🤖 Assisted       |
+| Plugin structure & code          | 👨‍💻 Manual        |
+| Memory injection logic           | 👨‍💻 Manual        |
+| TypeScript types/interfaces      | 🤖 Assisted       |
+| Deployment config (Railway)      | 👨‍💻 Manual        |
+| This README & NOTES.md           | 🤖 Draft + Manual |
 
 ---
 
-## 🔧 Technical Challenges & Solutions
+## 🐛 Bugs Faced & Fixes
 
-### **1. Weaviate Schema Issues**
-**Problem**: Schema creation through code wasn't working properly
-**Solution**: Manual schema creation in Weaviate console with `text2vec-weaviate` vectorizer
+### 🧩 Schema Setup Not Persisting
+- **Issue**: Programmatic schema setup in Weaviate kept failing.
+- **Fix**: Used Weaviate UI to create class with `text2vec-weaviate`. Also my schema initialization for some reason kept creating the schema but without vectorization, so i had to manually create schema in my weaviate cloud and then process those 5 .md documents inside the cluster from our code.
 
-**Key Learning**: Sometimes manual configuration is more reliable than programmatic setup
+### 💥 Memory Overload on Large Files
+- **Issue**: Document processing was crashing Node due to large reads.
 
-### **2. Document Processing Memory**
-**Problem**: Large documents caused memory spikes during processing
-**Solution**: Implemented streaming generator pattern with small batch processing
+`<--- Last few GCs --->`
+
+`[11508:00000210FEC02000]    33395 ms: Mark-Compact 4037.8 (4129.6) -> 4032.2 (4139.8) MB, pooled: 0 MB, 430.43 / 0.00 ms  (average mu = 0.677, current mu = 0.391) allocation failure; scavenge might not succeed
+[11508:00000210FEC02000]    34214 ms: Mark-Compact 4047.9 (4139.8) -> 4039.7 (4147.6) MB, pooled: 0 MB, 790.12 / 0.00 ms  (average mu = 0.389, current mu = 0.036) allocation failure; scavenge might not succeed`
+
+
+`<--- JS stacktrace --->`
+
+`FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----`
+
+` 1: 00007FF70E1B20AD node::SetCppgcReference+17245
+ 2: 00007FF70E11A4D8 v8::base::CPU::num_virtual_address_bits+92376
+ 3: 00007FF70EC9A1B1 v8::Isolate::ReportExternalAllocationLimitReached+65
+ 4: 00007FF70EC87096 v8::Function::Experimental_IsNopFunction+2790
+ 5: 00007FF70EAD6920 v8::internal::StrongRootAllocatorBase::StrongRootAllocatorBase+31392
+ 6: 00007FF70EAD39BA v8::internal::StrongRootAllocatorBase::StrongRootAllocatorBase+19258
+ 7: 00007FF70EAE9251 v8::Isolate::GetHeapProfiler+7825
+ 8: 00007FF70EAE9ACA v8::Isolate::GetHeapProfiler+9994
+ 9: 00007FF70EAFA567 v8::Isolate::GetHeapProfiler+78247
+10: 00007FF70E7C348B v8::internal::Version::GetString+434795`
+
+- **Fix**: Added streaming generator with batch chunk creation. -- So what i did was implement a streaming generator approach that reads each .md file in smaller word batches and sends 2–3 chunks at a time for embedding. This drastically reduced memory usage and prevented crashes.
+
+### ⚙️ Path Aliases Broken in Build
+- **Issue**: `@/services` not resolving in `dist/`.
+- **Fix**: Added `tsc-alias` to transform paths post-compilation for modular and neat code as per specified and code now look really neat and production level as it is.
+
+---
+
+## 🧠 Agent Architecture & Flow
+
+### How the Agent Routes Plugin Calls + Embeds Memory + Context
+
+The agent follows a sophisticated orchestration pattern that combines multiple data sources into a unified response:
+
+#### 1. **Memory Management & Embedding**
+```typescript
+// Session-based memory with automatic cleanup
+await this.memoryService.addMessage(sessionId, 'user', message);
+const memorySummary = await this.memoryService.getFormattedSummary(sessionId);
+```
+- **Session persistence**: Each user gets unique session ID for conversation continuity
+- **Message history**: Stores user/assistant messages with timestamps
+- **Memory summarization**: Extracts last 2 exchanges (4 messages) for context
+- **Automatic cleanup**: Removes old sessions to prevent memory leaks
+- **Memory embedding**: Past conversation context is embedded into every prompt
+
+#### 2. **Plugin Detection & Execution Flow**
+```typescript
+// Intent-based plugin routing
+const pluginResults = await this.pluginManager.detectAndExecutePlugins(message);
+```
+**Plugin Detection Patterns:**
+- **Weather plugin**: `/weather\s+(?:in\s+)?([a-zA-Z\s]+)/i` → "weather in Bangalore"
+- **Math plugin**: `/(\d+(?:\s*[\+\-\*\/]\s*\d+)+)/` → "2 + 2 * 5"
+
+**Execution Flow:**
+1. **Intent Detection**: Each plugin implements `detectIntent(message)` method
+2. **Parallel Execution**: All matching plugins execute simultaneously
+3. **Error Isolation**: Failed plugins don't break the entire flow
+4. **Result Collection**: All plugin outputs are gathered for context injection
+
+#### 3. **RAG (Retrieval-Augmented Generation) Context**
+```typescript
+// Enhanced search with semantic retrieval
+const searchQuery = this.enhanceSearchQuery(message);
+const ragResults = await this.ragService.search(searchQuery, {
+  maxSearchResults: config.rag.maxSearchResults,
+  similarityThreshold: 0.5,
+});
+```
+**Query Enhancement:**
+- "what is X" → "X definition overview introduction basics"
+- "how to Y" → "Y guide tutorial steps instructions"
+
+**Retrieval Process:**
+1. **Semantic Search**: Uses Weaviate's `nearText` for meaning-based retrieval
+2. **Top-k Selection**: Gets top 3 most relevant document chunks
+3. **Similarity Filtering**: Only includes results above 0.5 threshold
+4. **Source Tracking**: Maintains document source and metadata
+
+#### 4. **Context Integration & Prompt Engineering**
+The agent builds a comprehensive prompt that embeds all context sources:
 
 ```typescript
-// Memory-safe streaming approach
-async function* streamChunksFromFile(filePath: string) {
-  const content = await fs.readFile(filePath, 'utf-8');
-  const words = content.split(/\s+/);
-
-  for (let i = 0; i < words.length; i += config.rag.maxChunkTokens) {
-    const chunk = words.slice(i, i + config.rag.maxChunkTokens).join(' ');
-    yield [{
-      id: uuid(),
-      content: chunk,
-      source: path.basename(filePath),
-      metadata: { fileName: path.basename(filePath), processedAt: new Date().toISOString() }
-    }];
-  }
-}
-```
-
-### **3. TypeScript Path Aliases**
-**Problem**: `@/` path aliases didn't work in compiled JavaScript
-**Solution**: Added `tsc-alias` to resolve aliases during build process
-
-```json
-{
-  "scripts": {
-    "build": "tsc && tsc-alias",
-    "start": "node dist/server.js"
-  }
-}
-```
-
-### **4. Weaviate Vectorization**
-**Problem**: Initially tried `text2vec-transformers` which wasn't available
-**Solution**: Switched to `text2vec-weaviate` (Weaviate's built-in vectorizer)
-
-**Key Learning**: Always verify vectorizer availability in your Weaviate instance
-
-### **5. Memory Management**
-**Problem**: Node.js memory usage grew over time
-**Solution**: Added garbage collection flags and manual cleanup
-
-```bash
-node --max-old-space-size=4096 --expose-gc dist/server.js
-```
-
----
-
-## 📊 Performance Optimizations
-
-### **Document Processing**
-- **Chunk Size**: 30 tokens with 5 token overlap (memory-safe)
-- **Batch Processing**: Process documents in small batches
-- **Streaming**: Use generators to avoid memory spikes
-
-### **Search Optimization**
-- **Similarity Threshold**: 0.7 default (configurable)
-- **Result Limit**: 3 results by default
-- **Caching**: Consider Redis for production
-
-### **Memory Usage**
-- **In-Memory Storage**: Map-based session storage
-- **Cleanup**: Automatic session cleanup after 24 hours
-- **Garbage Collection**: Manual GC triggers
-
----
-
-## 🎨 Prompt Engineering
-
-### **RAG Prompt Structure**
-```typescript
-const prompt = `
-You are a helpful AI assistant with access to conversation memory and document knowledge.
+// Structured prompt with all context layers
+let prompt = `You are a helpful AI assistant with access to conversation memory, document knowledge, and plugin capabilities.
 
 ## CONVERSATION MEMORY
 ${memorySummary}
 
 ## DOCUMENT CONTEXT
-${ragResults.map(result => `${result.content} (Source: ${result.source})`).join('\n')}
+${ragResults.map(result => `${result.source}: ${result.content}`).join('\n')}
+
+## PLUGIN RESULTS
+${pluginResults.map(result => `${result.name}: ${JSON.stringify(result.data)}`).join('\n')}
 
 ## USER MESSAGE
 ${message}
 
 ## INSTRUCTIONS
-- Provide comprehensive, confident responses
-- Always cite sources when using document information
-- Be helpful and informative
-- Use general knowledge to supplement document info
-
-## RESPONSE
+- Use document context to enhance responses with specific details
+- Cite sources when using document information
+- Incorporate plugin results naturally
+- Maintain conversation continuity using memory
 `;
 ```
 
-### **Key Principles**
-1. **Clear Structure**: Separate sections for memory, context, and instructions
-2. **Source Attribution**: Always include source information
-3. **Confidence**: Encourage confident responses with fallbacks
-4. **Context**: Include relevant document chunks with attribution
-
----
-
-## 🔌 Plugin System Design
-
-### **Architecture**
+#### 5. **Response Generation with Context**
 ```typescript
-interface Plugin {
-  name: string;
-  description: string;
-  detectIntent(message: string): boolean;
-  execute(input: any): Promise<PluginResult>;
-}
+// LLM call with full context integration
+const aiResponse = await this.generateAIResponse(prompt, message);
+```
+- **Context-aware generation**: All memory, RAG, and plugin data included
+- **Source citation**: Agent cites document sources (e.g., "According to [filename]...")
+- **Plugin integration**: Naturally incorporates weather/math results
+- **Memory continuity**: Builds on previous conversation context
 
-interface PluginResult {
-  success: boolean;
-  data: any;
-  error?: string;
-}
+#### 6. **Response Assembly & Metadata**
+```typescript
+// Structured response with full transparency
+return {
+  reply: aiResponse,
+  used_chunks: ragResults.map(result => ({
+    content: result.content,
+    source: result.source,
+    score: result.score,
+  })),
+  plugins_used: pluginResults.map(result => ({
+    name: result.name,
+    success: result.success,
+    data: result.data,
+  })),
+  memory_snapshot: memorySnapshot,
+  session_id: sessionId,
+};
 ```
 
-### **Intent Detection**
-- **Weather**: Regex pattern for "weather in <city>"
-- **Math**: Regex pattern for arithmetic expressions
-- **Extensible**: Easy to add new plugins
+#### 7. **Complete Flow Example**
+```
+User: "What's the weather in Bangalore and how does it compare to markdown benefits?"
 
-### **Integration**
-- Plugin outputs injected into AI prompt
-- Results included in final response
-- Graceful fallback if plugins fail
-
----
-
-## 🚀 Deployment Strategy
-
-### **Environment Variables**
-```env
-# Core
-PORT=3000
-NODE_ENV=production
-
-# AI
-GOOGLE_AI_API_KEY=your_key
-
-# Database
-WEAVIATE_URL=https://your-cluster.weaviate.network
-WEAVIATE_API_KEY=your_key
-
-# RAG
-MAX_CHUNK_TOKENS=30
-CHUNK_OVERLAP=5
-MAX_SEARCH_RESULTS=3
+1. MEMORY: "No previous conversation"
+2. PLUGINS: Weather plugin detects "weather in Bangalore" → calls OpenWeather API
+3. RAG: "markdown benefits" → searches documents → finds relevant chunks
+4. CONTEXT: Builds prompt with weather data + markdown docs + user question
+5. LLM: Generates response citing both weather and document sources
+6. RESPONSE: Returns structured response with weather data, document chunks, and AI reply
 ```
 
-### **Railway Deployment**
-1. **GitHub Integration**: Automatic deployment on push
-2. **Environment Variables**: Set in Railway dashboard
-3. **Health Checks**: `/health` endpoint for monitoring
-4. **Logs**: Centralized logging for debugging
-
----
-
-## 🐛 Common Issues & Solutions
-
-### **Weaviate Connection**
-```bash
-# Error: "no cluster URL found"
-# Solution: Add X-Weaviate-Cluster-Url header
-headers: {
-  'X-Weaviate-Cluster-Url': config.weaviate.url,
-}
-```
-
-### **Memory Leaks**
-```bash
-# Error: High memory usage
-# Solution: Use streaming and manual GC
-node --max-old-space-size=4096 --expose-gc dist/server.js
-```
-
-### **TypeScript Paths**
-```bash
-# Error: Module not found for @/ imports
-# Solution: Use tsc-alias
-npm install tsc-alias
-# Add to build script: tsc && tsc-alias
-```
-
----
-
-## 📈 Metrics & Monitoring
-
-### **Current Performance**
-- **Document Processing**: 335 chunks in ~30 seconds
-- **Search Response**: <500ms average
-- **Memory Usage**: ~50MB baseline
-- **Concurrent Sessions**: 100+ supported
-
-### **Monitoring Points**
-- **API Response Times**: Track endpoint performance
-- **Memory Usage**: Monitor for leaks
-- **Error Rates**: Track failed requests
-- **Search Quality**: Monitor relevance scores
-
----
-
-## 🎯 Future Enhancements
-
-### **Phase 2: Plugin System**
-- [ ] Weather plugin with OpenWeatherMap API
-- [ ] Math plugin with safe evaluation
-- [ ] Intent detection system
-- [ ] Plugin marketplace concept
-
-### **Phase 3: Production Features**
-- [ ] Redis for session storage
-- [ ] Rate limiting and authentication
-- [ ] Advanced error handling
-- [ ] Monitoring and alerting
-
-### **Phase 4: Advanced RAG**
-- [ ] Multi-modal support (images, PDFs)
-- [ ] Custom embedding models
-- [ ] Advanced chunking strategies
-- [ ] Semantic caching
-
----
-
-## 💡 Key Learnings
-
-### **Development Process**
-1. **Start Simple**: Begin with basic functionality, iterate
-2. **Test Early**: Test each component independently
-3. **Document Everything**: Good docs save time later
-4. **Monitor Performance**: Always measure before optimizing
-
-### **Technical Decisions**
-1. **Manual Configuration**: Sometimes better than programmatic
-2. **Streaming**: Essential for large data processing
-3. **Type Safety**: TypeScript prevents many runtime errors
-4. **Modular Design**: Makes testing and maintenance easier
-
-### **Production Readiness**
-1. **Environment Management**: Proper config separation
-2. **Error Handling**: Graceful fallbacks everywhere
-3. **Monitoring**: Logs and metrics for debugging
-4. **Documentation**: Clear setup and usage instructions
-
----
-
-## 🏆 Success Metrics
-
-### **Functional**
-- ✅ RAG system working with document retrieval
-- ✅ Memory system maintaining conversation context
-- ✅ AI generating relevant, cited responses
-- ✅ API responding in <500ms
-
-### **Technical**
-- ✅ TypeScript compilation without errors
-- ✅ Memory usage under control
-- ✅ Error handling with graceful fallbacks
-- ✅ Clean, modular codebase
-
-### **User Experience**
-- ✅ Clear API documentation
-- ✅ Easy setup process
-- ✅ Helpful error messages
-- ✅ Consistent response format
-
----
-
-**This project demonstrates the power of combining modern TypeScript development with cutting-edge AI technologies to create a production-ready intelligent agent system.** 🚀
+This architecture ensures that every response is contextually rich, factually grounded, and conversationally coherent.
